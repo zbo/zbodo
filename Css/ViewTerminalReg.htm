@@ -1,0 +1,900 @@
+﻿<%@ Control Language="C#" AutoEventWireup="true" CodeBehind="ViewTerminalRegistration.ascx.cs" Inherits="DNVS.EPL.EPS.EPSWeb.Registration.UserControls.ViewTerminalRegistration" %>
+<style type="text/css">
+    .redborder
+    {
+        border: 2px dashed #ff0000;
+    }
+    .greenborder
+    {
+        border: 2px dashed #00ff00;
+    }
+    .redback
+    {
+        background-color: #CC0066;
+    }
+    .hidetemplate
+    {
+        display: none;
+    }
+    .mousehand
+    {
+        cursor: pointer;
+    }
+    .hidetb
+    {
+        display: none;
+    }
+    .hidetr
+    {
+        display: none;
+    }
+    .hidetd
+    {
+        display: none;
+    }
+    .showtr
+    {
+        display: block;
+    }
+    .writeback
+    {
+        background-color: #ffffff;
+    }
+    .trfocuscolor
+    {
+        background-color: #e2ecb5;
+    }
+	    .hidea
+    {
+        display: none;
+    }
+    .hideinput
+    {
+        display: none;
+    }
+    .hidespan
+    {
+        display: none;
+    }
+    .showspan
+    {
+        display: block;
+        overflow: hidden;
+        width: 400px;
+    }
+    .trHeight
+    {
+        height: 25px;
+    }
+    .vesselTreeUL
+    {
+        margin: 0;
+        padding: 5px 0 0 20px;
+    }
+    .hideDiv
+    {
+        display:none;
+    }
+    .vesselTreeLIActive
+    {
+        cursor: pointer; list-style-type: disc;
+    }
+	.vesselTreeLIDisable
+    {
+        cursor:default;
+		color:#999999;
+		list-style-type: disc;
+    }
+	.vesselTreeLiSelected
+	{
+		background-color:#6FBD2F;
+		color: #fff;
+		/*color: #3c9716;
+		text-decoration: underline;*/
+	}
+    .vesselTreeULHide
+	{
+		display:none;
+	}
+</style>
+
+<link type="text/css" href="App_Themes/JQuery_UI/base/ui.all.css" rel="stylesheet" />
+
+<script type="text/javascript" src="Scripts/date.js"></script>
+
+<script type="text/javascript" src="Scripts/jquery-ui-1.7.2.custom.min.js" ></script>
+
+<script type="text/javascript" src="Scripts/jquery.confirm-1.2.js"></script>
+
+<script type="text/javascript" src="Scripts/MicrosoftAjax.js"></script>
+
+<script type="text/javascript" src="Scripts/jquery.datePicker-2.1.2.js"></script>
+
+<script src="Scripts/simpledatepicker.js" type="text/javascript"></script>
+
+<script type="text/javascript" src="Scripts/jquery.numeric.js"></script>
+
+<script src="Scripts/epsmonthpicker.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+	var dpFrom;
+	var dpTo;
+	var prevSelectedOrg = getCookie("TerminalRegSelectedOrg");
+	$(document).ready(function() {
+	    InitialDatePicker();
+	    $("#SearchButton").click(function() {
+	        SearchTerminalRegs();
+	        $("#MainTable").removeClass("hideDiv");
+	    })
+	    $("#ClearButton").click(function() {
+	        ClearOldMainTable();
+	        $("#NoResultMessage").addClass("hideDiv");
+	        $("#MainTable").addClass("hideDiv");
+	    })
+	    $.ajax({
+	        type: 'get',
+	        cache: false,
+	        url: 'Service/TerminalRegstrationService.svc/GetAllTerminalsAsTree',
+	        dataType: 'json',
+	        success: function(data) {
+	            BuildUpOrgTree(data);
+	        }
+	    });     
+	   AttachEffect()
+	})
+	function AttachEffect() {
+	    //make fake dropdown looks like real dropdown's effect
+	    $('#selectVesselLink').mouseover(function() {
+	        $('#selectVesselBackground').attr('src', 'Images/dropdownbutton_whole_mouseover.png');
+	    }).mouseout(function() {
+	        $('#selectVesselBackground').attr('src', 'Images/dropdownbutton_whole.png');
+	    });
+	}
+    function Hideheader() {
+        $("#tableHeaderSpan").addClass("hidespan");
+        $("#Headder_MainTable").addClass("hidetr");
+        $("#headerDivider").addClass("hideDiv");
+     }
+     function Showheader() {
+         $("#tableHeaderSpan").removeClass("hidespan");
+         $("#Headder_MainTable").removeClass("hidetr");
+         $("#headerDivider").removeClass("hideDiv");
+    }
+	function BuildUpOrgTree(data) {
+	    $("#selectVesselTree").html("");
+	    var nodes = data.d;
+	    AddNode(nodes, $("#selectVesselTree"));
+	    HideBranchIfWithoutAnyAccess();
+	    var firstActiveLi;
+	    var query = '.vesselTreeLIActive[id="' + prevSelectedOrg + '"]';
+	        firstActiveLi = $("#selectVesselTree").find(query);
+	    if (firstActiveLi.length == 0)
+	        firstActiveLi = $("#selectVesselTree").find(".vesselTreeLIActive:first");
+	    $("#selectVesselTree").find(".vesselTreeLiSelected").removeClass("vesselTreeLiSelected");
+	    $(firstActiveLi).addClass("vesselTreeLiSelected");
+	    var name = firstActiveLi.html();
+	    var id = firstActiveLi[0].id;
+	    $("#selectedVesselFromTree").html(name);
+	    $("#cueerntVesselID").html(id);
+	    SearchTerminalRegs();
+
+	}
+	function AddNode(nodes, parent) {
+	    var nodehtml = '<ul class="vesselTreeUL">'
+	    $(nodes).each(function(i) {
+	        //debugger;
+	        if (nodes[i].Active == true)
+	            nodehtml += '<li onmouseover="javascript:this.style.textDecoration=\'underline\';" onmouseout="javascript:this.style.textDecoration=\'none\';" class="vesselTreeLIActive"  onclick="javascript:liclicked(this)" id="' + nodes[i].C_OID + '">' + nodes[i].Name + '</li>';
+	        else
+	            nodehtml += '<li class="vesselTreeLIDisable"  id="' + nodes[i].C_OID + '">' + nodes[i].Name + '</li>';
+	    })
+	    nodehtml += '</ul>'
+	    if ($(parent).html() == "")
+	        parent.append(nodehtml);
+	    else
+	        parent.after(nodehtml);
+
+	    $(nodes).each(function(i) {
+	        var myparent = '#' + $(this)[0].C_OID
+	        AddNode($(this)[0].children, $(myparent));
+	    })
+
+	}
+	function liclicked(sender) {
+	    var id = $(sender)[0].id;
+	    var name = $(sender).html();
+	    $("#selectVesselTree").find(".vesselTreeLiSelected").removeClass("vesselTreeLiSelected");
+	    $(sender).addClass("vesselTreeLiSelected");
+	    $("#divVesselTreeContainer").addClass("hideDiv");
+	    $("#selectedVesselFromTree").html(name);
+	    $("#cueerntVesselID").html(id);
+	    ClearOldMainTable();
+	    $("#NoResultMessage").addClass('hideDiv');
+	    $("#MainTable").addClass("hideDiv");
+	}
+	function HideBranchIfWithoutAnyAccess() {
+	    var AllUL = $("#selectVesselTree").find("ul");
+	    $(AllUL).each(function() {
+	        //debugger;
+	        var needHide = $(this).find("li").hasClass("vesselTreeLIActive");
+	        if (needHide == false) {
+	            $(this).addClass("vesselTreeULHide");
+	        }
+	    })
+	}
+	function HideVesselTree()
+	{
+	    $("#divVesselTreeContainer").addClass("hideDiv");
+	}
+	function SelectVesselFromTree() {
+	    var hide = $("#divVesselTreeContainer").hasClass("hideDiv");
+	    if (hide == true) {
+	        $("#divVesselTreeContainer").removeClass("hideDiv");
+	        var left = $("#selectVesselLink").offset().left;
+	        var top = $("#selectVesselLink").offset().top;
+	        top = top + $("#selectVesselLink").height();
+	        $("#divVesselTreeContainer").css("top", top);
+	        $("#divVesselTreeContainer").css("left", left);
+	    }
+	    else {
+	        $("#divVesselTreeContainer").addClass("hideDiv");
+	    }
+	}
+	function InitialDatePicker() {
+	    var firstDate = new Date();
+	    var year = firstDate.getFullYear();
+	    firstDate.setFullYear(year, 0, 1);
+	    $('#EPSDatePicker_FromDate').epsMonthPicker(firstDate.format("yyyy-MM-dd"));
+	    $('#EPSDatePicker_ToDate').epsMonthPicker();
+	}
+	function SearchTerminalRegs() {
+
+	    if ($("#cueerntVesselID").html() == null)
+	        return;
+		var loadingDiv=$("#divLoading").clone();
+		$(loadingDiv).css("display","block");
+		$("#MainTable").after(loadingDiv);
+		$("#MainTable").addClass("hidetb");
+		var dateFrom = $('#EPSDatePicker_FromDate').simpleDateGet().format("yyyy-MM-dd");
+		var dateTo = $('#EPSDatePicker_ToDate').simpleDateGet().format("yyyy-MM-dd");
+		var paratemp=new Object();
+		paratemp.orgId=$("#cueerntVesselID").html();
+		paratemp.dateFrom=dateFrom;
+		paratemp.dateTo=dateTo;
+		var para = Sys.Serialization.JavaScriptSerializer.serialize(paratemp);
+		$.ajax({
+			type: 'post',
+			url: 'Service/TerminalRegstrationService.svc/GetTerminalIndexesByOrg',
+			contentType: 'application/json',
+			data: para,
+            dataType: 'json',
+            success: function(data) {ClearOldMainTable();BindMainTableData(data);}
+		});
+	}
+	function ClearOldMainTable()
+	{
+		$("#MainTable").removeClass("hidetb");
+		$("#MainTable").parent().find("div[id='divLoading']").remove();
+		$("#MainTable").children().find('tr[id="ready"]').remove();
+		$("#MainTable").children().find('tr[id*="sub"]').remove();
+		Hideheader();
+	}
+	function BindSelectVessel(data)
+	{
+		$(data.d).each(function() {
+            $("#SelectVessel").append("<option value=" + this.C_OID + ">" + this.Name + "</option>");
+        });
+	}
+	
+	function BindMainTableData(mainTableView) 
+	{
+	    if (mainTableView.d.length == 0)
+	    {$("#NoResultMessage").removeClass('hideDiv'); 
+	    $("#MainTable").addClass("hideDiv");}
+	    else {
+	        $("#NoResultMessage").addClass('hideDiv');
+	        Showheader();
+	    }
+	    $.each(mainTableView.d, function(i, n) {
+	        var row = $("#Template_MainTable").clone();
+
+	        $(row).removeClass("hidetr");
+	        var currentUnit = $("#selectedVesselFromTree").html();
+	        $(row.find("#Body_Unit")).text(currentUnit);
+	        $(row.find("#Body_RegDate")).text(n.RegDate);
+	        $(row.find("#Body_RegValue")).text(n.TerminalValue);
+	        $(row.find("#Body_Comment #Body_Comment_Span")).text(n.Comment);
+	        $(row.find("#Body_C_OID")).text(n.ID);
+	        $(row.find("#Body_OrgID")).text(n.OrgID);
+	        row.attr("id", "ready"); //change binded row id
+	        row.appendTo("#MainTable"); //add new row into table
+	    })
+		SetMainTableStyle();
+	}
+	function SetMainTableStyle()
+	{
+		$("#MainTable").find('tr:even:visible[id*="ready"]').addClass("writeback");
+
+		$("#MainTable").find('a[id="Body_Delete_Link"]').click(function() {
+			DeleteOperationalCo2Index(this);
+		})
+		$("#MainTable").find('a[id="Body_Delete_Link"]').confirm({
+		    msg: $("#divDeleteConfirm").html() + " ",
+		    buttons: {
+		        ok: $("#divYes").html(),
+		        cancel: $("#divNo").html(),
+		        separator: '/'
+		    }
+		});
+	}
+	function DeleteOperationalCo2Index(sender)
+	{
+		var id=$(sender).parent().parent().find('td[id*="Body_C_OID"]').html();
+		var orgId=$(sender).parent().parent().find('td[id*="Body_OrgID"]').html();
+		var para=new Object();
+		para.terminalIndexId = id;
+		var para = Sys.Serialization.JavaScriptSerializer.serialize(para);
+		$.ajax({
+			type: 'post',
+			url: 'Service/TerminalRegstrationService.svc/DeleteTerminalIndex',
+			contentType: 'application/json',
+			data: para,
+            dataType: 'json',
+            success: function(data) {
+										if(data.d=="succeed")
+										{
+											$(sender).closest("tr").addClass("hidetr");
+											$(sender).attr("src","Images/CanExpand.gif");
+											var trFindString = 'tr[id="sub' + id + '"]';
+											$(sender).parent().parent().parent().find(trFindString).addClass("hidetr");
+										}
+										else
+										{
+											alert(data.d);
+										}
+									}
+		});
+	}
+	function ImgExpandClick(sender) {
+	    var id = $(sender).parent().parent().find('td[id*="Body_C_OID"]').html();
+		var orgId=$(sender).parent().parent().find('td[id*="Body_OrgID"]').html();
+		//change img to be closeable
+		if($(sender).attr("src").substring($(sender).attr("src").length-20,$(sender).attr("src").length)=="Images/CanExpand.gif")//expand the sub table
+		{
+			$(sender).attr("src","Images/CanClose.gif");	
+			var tdFindStringPara='tr td[id="subContainorPara'+id+'"]'
+			var tdFindStringComment = 'tr td[id="subContainorComment' + id + '"]'
+			var tdFindStringMessage = 'tr td[id="subContainorMessage' + id + '"]'
+			var tdComm=$(sender).parent().parent().parent().find(tdFindStringComment);
+			var tdPara=$(sender).parent().parent().parent().find(tdFindStringPara);
+			if(tdPara.length==0)//not have any catched tds
+			{
+				var subtable_comment=$("#templatePackage").find("#Template_SubTable_Comment").clone();
+				var subtable_parameters = $("#templatePackage").find("#Template_SubTable_Parameters").clone();
+				var subtable_message = $("#templatePackage").find("#Template_SubTable_Message").clone();
+				var subtable=$("#Template_SubContainor").clone();
+				//$(subtable_comment).removeClass("hidetb");
+				//$(subtable_parameters).removeClass("hidetb");
+				//build up sub table
+				var appendTrStringPara='<tr id="sub'+id+'" class="hidetr"><td colspan="6" id="subContainorPara'+id+'"></td></tr>';
+				var appendTrStringComment = '<tr id="sub' + id + '" class="hidetr"><td td colspan="6" id="subContainorComment' + id + '"></td></tr>';
+				var appendTrStringMessage = '<tr id="sub' + id + '" class="hidetr"><td td colspan="6" id="subContainorMessage' + id + '"></td></tr>';
+				//debugger;
+				$(sender).parent().parent().after(appendTrStringPara);
+				$(sender).parent().parent().after(appendTrStringComment);
+				$(sender).parent().parent().after(appendTrStringMessage);
+				$(sender).parent().parent().parent().find(tdFindStringPara).append(subtable_parameters);
+				$(sender).parent().parent().parent().find(tdFindStringComment).append(subtable_comment);
+				$(sender).parent().parent().parent().find(tdFindStringMessage).append(subtable_message);
+				
+				GetSubTableData(sender);
+				var query1 = 'tr[id="sub' + id + '"]';
+				$("#MainTable").find(query1).removeClass("hidetr");
+				$(subtable_comment).removeClass("hidetb");
+				$(subtable_parameters).removeClass("hidetb");
+			}
+			else//use catched tds
+			{	
+				$(tdPara).parent().removeClass("hidetr");
+				$(tdComm).parent().removeClass("hidetr");
+			}
+		}
+		else//close the sub table
+		{
+			$(sender).attr("src","Images/CanExpand.gif");
+			var trFindString='tr[id="sub'+id+'"]';
+			$(sender).parent().parent().parent().find(trFindString).addClass("hidetr");
+		}
+	}
+
+	function GetSubTableData(sender) {
+	    var id = $(sender).parent().parent().find('td[id*="Body_C_OID"]').html();
+		var orgId=$(sender).parent().parent().find('td[id*="Body_OrgID"]').html();
+		var regDate=$(sender).parent().parent().find('td[id*="Body_RegDate"]').html();
+		var comment = $(sender).parent().parent().find('span[id*="Body_Comment_Span"]').html();
+		var loadingDiv=$("#divLoading").clone();
+		$(loadingDiv).attr('id','expandLoading');
+		$(loadingDiv).css("display", "block");
+		var tempTr = '<tr id="tempLoadingTr"><td colspan="6" id="tempLoadingTd"></td></tr>'
+		$(sender).parent().parent().after(tempTr);
+		//debugger;
+		$("#MainTable").find('td[id="tempLoadingTd"]').append(loadingDiv);
+		var paratemp=new Object();
+		paratemp.orgId = orgId;
+		paratemp.regPeriodDate = regDate;
+		var para = Sys.Serialization.JavaScriptSerializer.serialize(paratemp);
+		$.ajax({
+		    type: 'post',
+		    url: 'Service/TerminalRegstrationService.svc/GetTerminalRegValues',
+		    contentType: 'application/json',
+		    data: para,
+		    dataType: 'json',
+		    success: function(data) {
+		    BindSubTableData(data,id, orgId, comment);
+		        //$("#expandLoading").remove();
+		        $("#tempLoadingTr").remove();
+		    }
+		});
+	}
+	function BindSubTableData(data, id, orgId, comment) {
+	    var tdFindStringPara = 'td[id="subContainorPara' + id + '"]';
+	    var tdFindStringComment = 'td[id="subContainorComment' + id + '"]';
+		var tablePara=$("#MainTable").find(tdFindStringPara).find("table[id='Template_SubTable_Parameters']");
+		var tableComm=$("#MainTable").find(tdFindStringComment).find("table[id='Template_SubTable_Comment']");
+		//bind data for parameters table
+		$.each(data.d, function(i, n){
+			var row = $("#Template_Sub_Parameter_Tr").clone();
+			$(row).removeClass("hidetr");
+            $(row.find("#Sub_ParameterName").find('span[id="Sub_ParameterName_Span"]')).text(n.Name);
+            $(row.find("#Sub_ParameterValue").find('span[id="Sub_ParameterValue_Span"]')).text(n.LastRegValue);
+			$(row.find("#Sub_ParameterUnit").find('span[id="Sub_ParameterUnit_Span"]')).text(n.Unit);
+			$(row.find("#Sub_RegistrationCOid").find('span[id="Sub_RegistrationCOid_Span"]')).text(n.C_OID);
+			row.attr("id", "ready"); //change binded row id
+            row.appendTo(tablePara); //add new row into table
+		})
+		
+		$(tablePara).find('tr:even').addClass("writeback");
+		
+		//bind data for comments table
+		$(tableComm).find("td[id='Sub_Comment']").find("span[id='commentSpan']").text(comment);
+		//set parameter edit textbox numeric
+		$('input[id="paraEdit"]').numeric();
+	}
+	//edit function package
+	function CancelAllOtherEdit(sender)
+	{
+		//debugger;
+		var currInputEdit=$(sender).parent().parent().find('input[id="paraEdit"]');
+		$("#MainTable").find('input:visible[id="paraEdit"]').each(function(){
+			if($(this)!=currInputEdit)
+			{
+				$(this).addClass("hideinput");
+				$(this).parent().find('span[id="Sub_ParameterValue_Span"]').removeClass("hidespan");
+				$(this).parent().parent().find('a[id="saveA"]').addClass("hidea");
+				$(this).parent().parent().find('a[id="cancelA"]').addClass("hidea");
+				$(this).parent().parent().find('a[id="editA"]').removeClass("hidea");
+			}
+		})
+		$("#MainTable").find('input:visible[id="commentEdit"]').each(function(){
+			if($(this)!=currInputEdit)
+			{
+				$(this).addClass("hideinput");
+				$(this).parent().find('span[id="commentSpan"]').removeClass("hidespan");
+				$(this).parent().parent().find('a[id="saveA"]').addClass("hidea");
+				$(this).parent().parent().find('a[id="cancelA"]').addClass("hidea");
+				$(this).parent().parent().find('a[id="editA"]').removeClass("hidea");
+			}
+		})
+	}
+	function editA_clicked(sender)
+	{
+		CancelAllOtherEdit(sender);
+		$(sender).parent().find('a[id="saveA"]').removeClass("hidea");
+		$(sender).parent().find('a[id="cancelA"]').removeClass("hidea");
+		$(sender).parent().find('a[id="editA"]').addClass("hidea");
+		var spanValue=$(sender).parent().parent().find('span[id="Sub_ParameterValue_Span"]');
+		spanValue.addClass("hidespan");
+		var CurrValue=spanValue.html();
+		var inputEdit=$(sender).parent().parent().find('input[id="paraEdit"]');
+		inputEdit.removeClass("hideinput");
+		inputEdit.attr("value", CurrValue);
+		CleanMessage();
+    }
+    function CleanMessage() {
+        $("#Template_SubTable_Message").addClass("hidetb");
+        $("#MessageHolder").html();
+    }
+	function saveA_clicked(sender) {
+
+	    var spanValue = $(sender).parent().parent().find('span[id="Sub_ParameterValue_Span"]');
+	    var inputEdit = $(sender).parent().parent().find('input[id="paraEdit"]');
+	    var value = $(inputEdit).val();
+        if (!isNumber(value) || value < 0) {
+	        var message = $("#divValueNotAllowNull").html();
+	        alert(message);
+	        return;
+	    }
+		$(sender).parent().find('a[id="saveA"]').addClass("hidea");
+		$(sender).parent().find('a[id="cancelA"]').addClass("hidea");
+		$(sender).parent().find('a[id="editA"]').removeClass("hidea");	
+		if($(spanValue).text()==$(inputEdit).val())
+		{
+			spanValue.removeClass("hidespan");
+			inputEdit.addClass("hideinput");
+		}
+		else
+		{
+			SaveParameter(sender);
+		}
+	}
+	function cancelA_clicked(sender)
+	{
+		$(sender).parent().find('a[id="saveA"]').addClass("hidea");
+		$(sender).parent().find('a[id="cancelA"]').addClass("hidea");
+		$(sender).parent().find('a[id="editA"]').removeClass("hidea");
+		var spanValue=$(sender).parent().parent().find('span[id="Sub_ParameterValue_Span"]');
+		spanValue.removeClass("hidespan");
+		var inputEdit=$(sender).parent().parent().find('input[id="paraEdit"]');
+		inputEdit.addClass("hideinput");
+	}
+	function editA_comm_clicked(sender)
+	{
+		CancelAllOtherEdit(sender);
+		$(sender).parent().find('a[id="saveA"]').removeClass("hidea");
+		$(sender).parent().find('a[id="cancelA"]').removeClass("hidea");
+		$(sender).parent().find('a[id="editA"]').addClass("hidea");
+		var spanValue=$(sender).parent().parent().find('span[id="commentSpan"]');
+		spanValue.removeClass("showspan");
+		spanValue.addClass("hidespan");
+		var CurrValue=spanValue.html();
+		var inputEdit=$(sender).parent().parent().find('input[id="commentEdit"]');
+		inputEdit.removeClass("hideinput");
+		inputEdit.attr("value", CurrValue);
+		CleanMessage();
+	}
+	function saveA_comm_clicked(sender) {
+	    
+		$(sender).parent().find('a[id="saveA"]').addClass("hidea");
+		$(sender).parent().find('a[id="cancelA"]').addClass("hidea");
+		$(sender).parent().find('a[id="editA"]').removeClass("hidea");
+		var spanValue=$(sender).parent().parent().find('span[id="commentSpan"]');
+		var inputEdit = $(sender).parent().parent().find('input[id="commentEdit"]');
+		
+		if($(spanValue).text()==$(inputEdit).val())
+		{
+			spanValue.removeClass("hidespan");
+			spanValue.addClass("showspan");
+			inputEdit.addClass("hideinput");
+		}
+		else
+		{
+			SaveComment(sender);
+		}
+	}
+	function cancelA_comm_clicked(sender)
+	{
+		$(sender).parent().find('a[id="saveA"]').addClass("hidea");
+		$(sender).parent().find('a[id="cancelA"]').addClass("hidea");
+		$(sender).parent().find('a[id="editA"]').removeClass("hidea");
+		var spanValue=$(sender).parent().parent().find('span[id="commentSpan"]');
+		spanValue.removeClass("hidespan");
+		spanValue.addClass("showspan");
+		var inputEdit=$(sender).parent().parent().find('input[id="commentEdit"]');
+		inputEdit.addClass("hideinput");
+	}
+	function SaveParameter(sender)
+	{
+		var oidTd=$(sender).parent().parent().find('span[id="Sub_RegistrationCOid_Span"]');
+		var regOid=$(oidTd).html();
+		var newRegValue=$(sender).parent().parent().find("#paraEdit").val();
+		var para=new Object();
+		para.regId=regOid;
+		para.newValue = newRegValue;
+		para.orgId = $("#cueerntVesselID").html();
+		var para = Sys.Serialization.JavaScriptSerializer.serialize(para);
+		$.ajax({
+		    type: 'post',
+		    url: 'Service/TerminalRegstrationService.svc/SaveRegistration',
+		    contentType: 'application/json',
+		    data: para,
+		    dataType: 'json',
+		    success: function(data) {
+		        var idTr = $(oidTd).parent().parent().parent().parent().parent().attr("id");
+		        var co2IndexId = idTr.substring(16, idTr.length);
+		        var spanValue = $(sender).parent().parent().find('span[id="Sub_ParameterValue_Span"]');
+		        var inputEdit = $(sender).parent().parent().find('input[id="paraEdit"]');
+		        if (data.d != null) {
+		            //refresh new co2 index value
+		            var tdFinder = "td:contains('" + co2IndexId + "')[id='Body_C_OID']";
+		            var tdMianID = $(tdFinder);
+		            $(tdMianID).parent().find('td[id="Body_RegValue"]').html(data.d);
+		            //update the show value
+		            $(spanValue).text($(inputEdit).val());
+		        }
+		        else {
+		            //not stop edit and show error message
+		            var message = $("#divLocalizeText").find("#EnergyConsumption0WithTransportWorkNot0").html();
+		            var indexOfLeftBrace = message.indexOf("(");
+		            message = message.substring(0, indexOfLeftBrace) + '<br/>' + message.substring(indexOfLeftBrace, message.length);
+		            var messageFindString = "#subContainorMessage" + co2IndexId;
+		            $(messageFindString).find("#Template_SubTable_Message").find('div[id="MessageHolder"]').html(message);
+		            $(messageFindString).find("#Template_SubTable_Message").removeClass("hidetb");
+
+		        }
+		        //reset edit input text box
+		        spanValue.removeClass("hidespan");
+		        inputEdit.addClass("hideinput");
+		    }
+		});
+	}
+	function SaveComment(sender)
+	{
+		var inputEdit=$(sender).parent().parent().find('input[id="commentEdit"]');
+		var newComment=$(inputEdit).val();
+		var subContainorId=$(sender).closest('table').closest('tr').attr('id');
+		subContainorId="subContainorPara"+subContainorId.substring(3,subContainorId.length);
+		var tdFinder='td[id="'+subContainorId+'"]';
+		var regOid=$("#MainTable").find(tdFinder).find('tr[id="ready"]').find('td[id="Sub_RegistrationCOid"]').eq(0).find('span[id="Sub_RegistrationCOid_Span"]').html();
+		var para=new Object();
+		para.regId = regOid;
+		para.newComment=newComment;
+		var para = Sys.Serialization.JavaScriptSerializer.serialize(para);
+		$.ajax({
+		    type: 'post',
+		    url: 'Service/TerminalRegstrationService.svc/SaveComment',
+		    contentType: 'application/json',
+		    data: para,
+		    dataType: 'json',
+		    success: function(data) {
+		        if (data.d == 'succeed') {
+		            $(inputEdit).addClass("hideinput");
+		            var spanedit = $(inputEdit).parent().find('span[id="commentSpan"]');
+		            spanedit.removeClass("hidespan");
+		            spanedit.addClass("showspan");
+		            $(spanedit).html($(inputEdit).val());
+		            var co2IndexId = $(sender).closest('table').closest('tr').attr('id');
+		            co2IndexId = co2IndexId.substring(3, co2IndexId.length);
+		            var tdFinder = "td:contains('" + co2IndexId + "')[id='Body_C_OID']";
+		            var tdMianID = $(tdFinder);
+		            $(tdMianID).parent().find('span[id="Body_Comment_Span"]').html($(inputEdit).val());
+		        }
+		        else {
+		            alert(data.d);
+		        }
+		    }
+		});
+	}
+	 function ChangeDate(selectIndex) {
+        var selectValue = document.getElementById("SelectTimePeriod").value;
+        var timePeriod = CalculateTimePeriod(selectValue);
+        $('#EPSDatePicker_FromDate').simpleDateSet(timePeriod.fromDate.format("yyyy-MM-dd"));
+        $('#EPSDatePicker_ToDate').simpleDateSet(timePeriod.toDate.format("yyyy-MM-dd"));
+    }
+	function daysInMonth(year, month) {
+        var dd = new Date(year, month + 1, 0);
+        return dd.getDate();
+    } 
+	function test()
+	{
+		$("#MainTable").find('td[id*="subContainorPara570"]').find("table[id*='Template_SubTable_Parameters']").addClass("redborder");
+	}
+</script>
+<div id="divVesselTreeContainer" class="vesselTreeContainer hideDiv">
+    <div class="vesselTreeHeader" style="display:none">
+        <div class="vesselTreeTitle">
+            <asp:Label ID="lblVesselTreeTitle" runat="server"></asp:Label>
+        </div>
+        <div class="vesselTreeController" onclick="HideVesselTree()"></div>
+    </div>
+    
+    <div id = "selectVesselTree" class="vesselTreeContent"></div>
+</div>
+
+<div id="wholePageContainor" style="width: 900px;">
+    <div class="dailyRegTitle regCapital regCapitalFix">
+        <asp:Literal runat="server" ID="ltlViewDailyReg"></asp:Literal></div>
+        
+    <table cellpadding="0" cellspacing="0" style="border: 1px solid rgb(102, 102, 102); background-color: rgb(240, 240, 240);" width="785px">
+        <tr  style="font-weight:bold;">
+            <td style="width: 210px; padding:10px 0px 0px 10px" class="commonLink2">
+                <asp:Label runat="server" ID="lblSelectVessel" Text="Select Equipment:" />
+                  
+            </td>
+            <td style="width:15px"></td>
+            <td style="width: 125px;padding:10px 0px 0px 0px">
+                <asp:Label runat="server" ID="lblTimePeriod" Text="Time Period:" />
+            </td>
+            <td style="width:15px"></td>
+            <td style="width: 100px;padding:10px 0px 0px 0px">
+                <asp:Label runat="server" ID="lblFromDate" Text="From date:" />
+            </td>
+            <td style="width:15px"></td>
+            <td style="width: 100px;padding:10px 0px 0px 0px">
+                <asp:Label runat="server" ID="lblToDate" Text="To date:" />
+            </td>
+            <td style="width:15px"></td>
+            <td style="width:180px"></td>
+        </tr>
+        <tr>
+            <td class="commonLink2" style="padding:5px 0px 10px 10px">
+                <div id="selectVesselLink" style="width: 200px; height: 20px; float:left; position:relative;" onclick="javascript:SelectVesselFromTree();">
+                    <img id="selectVesselBackground" src="Images/dropdownbutton_whole.png"/>
+                    <div style="width:180px; height:18px; position:absolute; top: 1; left: 1; overflow:hidden">
+                        <span id="selectedVesselFromTree" style=" float: left; width:178px; margin-left:4px">Select</span>
+                    </div>
+                </div>
+                <div style="display:none;" id="cueerntVesselID"></div>
+            </td>
+            <td style="width:15px"></td>
+            <td style="padding:5px 0px 10px 0px; width:125px">
+                <select id="SelectTimePeriod" onchange="ChangeDate(this.selectedIndex);" style="width: 150px">
+                    <option value="Custom">
+                        <asp:Literal runat="server" ID="Literal_SelectPeriod" Text="Selected period"></asp:Literal></option>                    
+                    <option value="Last3months">
+                        <asp:Literal runat="server" ID="Literal_Last3months" Text="Last 3 months"></asp:Literal></option>
+                    <option value="Last6months">
+                        <asp:Literal runat="server" ID="Literal_Last6months" Text="Last 6 months"></asp:Literal></option>
+                    <option value="Last12months">
+                        <asp:Literal runat="server" ID="Literal_Last12months" Text="Last 12 months"></asp:Literal></option>
+                </select>
+            </td>
+            <td style="width:15px"></td>
+            <td style="width:100px;padding:5px 0px 10px 0px;">                
+                <div id="EPSDatePicker_FromDate"/>
+            </td>
+            <td style="width:15px"></td>
+            <td style="width:100px;padding:5px 0px 10px 0px;">            
+                <div id="EPSDatePicker_ToDate" />
+            </td>
+            <td style="width:15px"></td>
+            <td class="commonLink2" style="width:180px;padding:5px 0px 10px 0px;">
+                <a href=# id="SearchButton" style="cursor: pointer; color: #3C9716;">
+                    <asp:Label runat="server" ID="literal_Show" Text="Show" /></a>
+                    &nbsp;&nbsp;
+                <a href=# id="ClearButton" style="cursor: pointer; color: #3C9716;">
+                <asp:Label runat="server" ID="literal_Clear" Text="Clear" /></a>
+            </td>
+          </tr>
+    </table>
+    <div class="h5" id="headerDivider"></div>
+    
+    <table id="MainTable" cellpadding="0" cellspacing="0" width="100%" style="border: 1px solid rgb(102, 102, 102); background-color: rgb(240, 240, 240); width:785px">
+        <thead>
+            <tr id="Headder_MainTable" class="trHeight" style="background-color:#E1E1E1; font-weight:bold">
+                <td id="Header_ExpandImg" align="left" width="25px">&nbsp;
+                </td>
+                <td id="Header_Unit" align="left" width="150px">
+                    <asp:Label runat="server" ID="lblHeader_Unit" Text="Unit" />
+                </td>
+                <td id="Header_RegDate" align="left" width="145px">
+                    <asp:Label runat="server" ID="lblHeader_RegDate" Text="Registration" />
+                </td>
+                <td id="Header_RegValue" align="left" width="100px">
+                    <asp:Label runat="server" ID="lblHeader_RegValue" Text="EEOI value" />
+                </td>
+                <td id="Header_Comment" align="left" width="165px">
+                    <asp:Label runat="server" ID="lblHeader_Comment" Text="Comment" />
+                </td>
+                <td id="Header_Delete" align="left" width="200px">&nbsp;
+                </td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr id="Template_MainTable" class="hidetr trHeight">
+                <td id="Body_ExpandImg" width="25px">
+                    <img id="ImgExpandor" style=" margin-left:5px" class="mousehand" src="Images/CanExpand.gif" onclick="javascript:ImgExpandClick(this)" />
+                </td>
+                <td id="Body_Unit" width="150px">
+                </td>
+                <td id="Body_RegDate" width="145px">
+                </td>
+                <td id="Body_RegValue" width="100px">
+                </td>
+                <td id="Body_Comment" width="165px">
+                    <span id="Body_Comment_Span" style="display: block; width: 165px; overflow: hidden;">
+                    </span>
+                </td>
+                <td id="Body_Delete" class="commonLink2" width="200px">
+                    <a href="javascript:;" style="cursor: pointer; color: #3C9716;" id="Body_Delete_Link">
+                        <asp:Label runat="server" ID="literal_Delete" Text="Delete" /></a>
+                </td>
+                <td id="Body_C_OID" class="hidetd">
+                </td>
+                <td id="Body_OrgID" class="hidetd">
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div id="templatePackage">
+        <table id="Template_SubTable_Message" class="hidetb" style="width:500px;margin-left:25px; border-color:rgb(102, 102, 102); border-style:solid; border-left-width:1px; border-right-width:1px; border-top-width:1px; border-bottom-width:0px; background-color: rgb(240, 240, 240);" cellspacing="0">
+            <tr style="background-color:#e1e1e1;font-weight:bold">
+                    <td><div id="MessageHolder" style="color: #3c9716;"></div></td>
+                </tr>
+        </table>
+        <table id="Template_SubTable_Comment" class="hidetb" style="width:500px;margin-left:25px;border: 1px solid rgb(102, 102, 102); background-color: rgb(240, 240, 240);" cellspacing="0">
+            <thead>
+                <tr style="background-color:#e1e1e1;font-weight:bold">
+                    <td align="left">
+                        <asp:Label runat="server" ID="lblSubHeader_Comment" Text="Comment" />
+                    </td>
+                    <td align="left">
+                        <asp:Label runat="server" ID="lblSubHeader_Edit" Text="Edit" />
+                    </td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="background-color: White;" class="trHeight">
+                    <td align="left" id="Sub_Comment" style="width:400px">
+                        <span id="commentSpan" class="showspan"></span>
+                        <input type="text" id="commentEdit" class="hideinput" style="width: 400px;" />
+                    </td>
+                    <td align="left" id="Sub_Comment_Edit" width="100px" class="commonLink2">
+                        <a href="javascript:;" id="editA" style="cursor: pointer; color: #3C9716;" onclick="javascript:editA_comm_clicked(this)">
+                            <asp:Label runat="server" ID="literal_Comm_Edit" Text="Edit" /></a> <a id="saveA" href="javascript:;"
+                                style="cursor: pointer; color: #3C9716;" class="hidea" onclick="javascript:saveA_comm_clicked(this)">
+                                <asp:Label runat="server" ID="literal_Comm_Save" Text="Save" /></a> <a id="cancelA" href="javascript:;"
+                                    style="cursor: pointer; color: #3C9716;" class="hidea" onclick="javascript:cancelA_comm_clicked(this)">
+                                    <asp:Label runat="server" ID="literal_Comm_Cancel" Text="Cancel" /></a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <table id="Template_SubTable_Parameters" class="hidetb" style=" width:500px; margin-bottom: 10px; margin-left:25px; border-bottom:1px solid rgb(102, 102, 102); border-left:1px solid rgb(102, 102, 102); border-right:1px solid rgb(102, 102, 102) ; border-top:0px; background-color: rgb(240, 240, 240);" cellspacing="0">
+            <thead>
+                <tr style="background-color:#e1e1e1;font-weight:bold">
+                    <td align="left">
+                        <asp:Label runat="server" ID="lblSubPara_Parameter" Text="Parameter" />
+                    </td>
+                    <td align="left">
+                        <asp:Label runat="server" ID="lblSubPara_Value" Text="Value" />
+                    </td>
+                    <td align="left">
+                        <asp:Label Visible="false" runat="server" ID="lblSubPara_Unit" Text="Unit" />
+                    </td>
+                    <td align="left">
+                        <asp:Label runat="server" ID="lblSubPara_Edit" Text="Edit" />
+                    </td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr id="Template_Sub_Parameter_Tr" class="hidetr trHeight">
+                    <td align="left" width="230px" id="Sub_ParameterName">
+                        <span id="Sub_ParameterName_Span"></span>
+                    </td>
+                    <td align="left" width="120px" id="Sub_ParameterValue">
+                        <span id="Sub_ParameterValue_Span"></span>
+                        <input type="text" id="paraEdit" class="hideinput" style="width:120px" />
+                    </td>
+                    <td align="left" width="50px" id="Sub_ParameterUnit">
+                        <span id="Sub_ParameterUnit_Span"></span>
+                    </td>
+                    <td align="left" width="100px" id="Sub_ParameterEdit" class="commonLink2">
+                        <a href="javascript:;" id="editA" style="cursor: pointer; color: #3C9716;" onclick="javascript:editA_clicked(this)">
+                            <asp:Label runat="server" ID="literal_Para_Edit" Text="Edit" /></a> <a id="saveA" href="javascript:;"
+                                style="cursor: pointer; color: #3C9716;" class="hidea" onclick="javascript:saveA_clicked(this)">
+                                <asp:Label runat="server" ID="literal_Para_Save" Text="Save" /></a> <a id="cancelA" href="javascript:;"
+                                    style="cursor: pointer; color: #3C9716;" class="hidea" onclick="javascript:cancelA_clicked(this)">
+                                    <asp:Label runat="server" ID="literal_Para_Cancel" Text="Cancel" /></a>
+                    </td>
+                    <td id="Sub_RegistrationCOid" class="hidetd">
+                        <span id="Sub_RegistrationCOid_Span"></span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div style=" color:red" class="hideDiv" id="NoResultMessage"><asp:Literal ID="ltlNoRecordCanbeFound" runat="server"></asp:Literal></div>
+</div>
+<div id="divLoading" style="width: 81px; height: 21px; background-image: url(Images/loading.gif);
+    display: none; margin: 0px 0 0 200px;">
+</div>
+<div id="divLocalizeText" style="display: none">
+    <div id="divValueNotAllowNull">
+        <asp:Literal ID="ltlValueNotAllowNull" runat="server"></asp:Literal></div>
+        <div id="divDeleteConfirm"><%=Resources.Common_strings.DeleteConfirm%></div>
+        <div id="divYes"><%=Resources.Common_strings.Yes%></div>
+        <div id="divNo"><%=Resources.Common_strings.No%></div>
+        <div id="EnergyConsumption0WithTransportWorkNot0"><%=Resources.Registration_strings.InvalidTerminalRegistration%></div>
+</div>
+<div class="redborder" style="height: 20px; width: 40px; display: none" onclick="javascript:test()">
+</div>

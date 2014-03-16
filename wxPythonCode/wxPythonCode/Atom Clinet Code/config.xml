@@ -1,0 +1,59 @@
+<Config>
+    <AllClients>
+        <Client>
+                    <ModuleName>CesiumClient</ModuleName>
+                    <GroupName>Client</GroupName>
+                    <MenuName>Cesium Client</MenuName>
+        </Client>
+        <Client>
+                    <ModuleName>ODMQD</ModuleName>
+                    <GroupName>Client</GroupName>
+                    <MenuName>ODMQD Client</MenuName>
+        </Client>
+        <Client>
+                    <ModuleName>BariumClient</ModuleName>
+                    <GroupName>Client</GroupName>
+                    <MenuName>Barium Client</MenuName>
+        </Client>
+        <Client>
+                    <ModuleName>IdentityManagement</ModuleName>
+                    <GroupName>Admin</GroupName>
+                    <MenuName>Identity Management</MenuName>
+        </Client>
+        <Client>
+                    <ModuleName>ServiceConfig</ModuleName>
+                    <GroupName>Admin</GroupName>
+                    <MenuName>Service Config</MenuName>
+        </Client>
+        <Client>
+                    <ModuleName>UserManagement</ModuleName>
+                    <GroupName>Admin</GroupName>
+                    <MenuName>User Management</MenuName>
+        </Client>
+        <Client>
+                    <ModuleName>OutBoundQueue</ModuleName>
+                    <GroupName>Admin</GroupName>
+                    <MenuName>Out Bound Queue</MenuName>
+                </Client>
+        <Client>
+                    <ModuleName>UserManagement</ModuleName>
+                    <GroupName>Admin</GroupName>
+                    <MenuName>User Management</MenuName>
+        </Client>
+        <Client>
+                    <ModuleName>VersionAndUpgrade</ModuleName>
+                    <GroupName>Admin</GroupName>
+                    <MenuName>Version and Upgrade</MenuName>
+        </Client>
+        <Client>
+                    <ModuleName>LocalStorage</ModuleName>
+                    <GroupName>Admin</GroupName>
+                    <MenuName>Local Storage</MenuName>
+        </Client>
+        <Client>
+                    <ModuleName>LogView</ModuleName>
+                    <GroupName>Admin</GroupName>
+                    <MenuName>Log View</MenuName>
+        </Client>
+    </AllClients>
+</Config>

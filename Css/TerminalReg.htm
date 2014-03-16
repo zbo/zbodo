@@ -1,0 +1,905 @@
+<%@ Control Language="C#" AutoEventWireup="true" CodeBehind="TerminalRegistration.ascx.cs"
+    Inherits="DNVS.EPL.EPS.EPSWeb.Registration.UserControls.TerminalRegistration" %>
+<style type="text/css">
+    .redborder
+    {
+        border: 2px dashed #ff0000;
+    }
+    .greenborder
+    {
+        border: 2px dashed #00ff00;
+    }
+    .hidetemplate
+    {
+        display: none;
+    }
+    .mousehand
+    {
+        cursor: pointer;
+    }
+    .hidetd
+    {
+        display: none;
+    }
+    .writeback
+    {
+        background-color: #ffffff;
+    }
+    .trfocuscolor
+    {
+        background-color: #e2ecb5;
+    }
+    .trHeight
+    {
+        height: 25px;
+    }
+    .hideDiv
+    {
+        display:none;
+    }
+    
+    .VesselTreeUL
+    {
+        margin: 0;
+        padding: 5px 0 0 20px;
+    }
+    .TerminalTreeLIActive
+    {
+        cursor: pointer; list-style-type: disc;
+    }
+	.TerminalTreeLIDisable
+    {
+        cursor:default;
+		color:#999999;
+		list-style-type: disc;
+    }
+	.TerminalTreeLiSelected
+	{
+		background-color:#6FBD2F;
+		color: #fff;
+	}
+    .TerminalTreeULHide
+	{
+		display:none;
+	}
+</style>
+<script type="text/javascript" src="Scripts/MicrosoftAjax.js"></script>
+<script type="text/javascript" src="Scripts/date.js"></script>
+<!--[if IE]><script type="text/javascript" src="Scripts/jquery.bgiframe.js"></script><![endif]-->
+<script type="text/javascript" src="Scripts/jquery.datePicker-2.1.2.js"></script>
+<script type="text/javascript" src="Scripts/jquery.numeric.js"></script>
+<script src="Scripts/simpledatepicker.js" type="text/javascript"></script>
+<script src="Scripts/epsmonthpicker.js" type="text/javascript"></script>
+<script type="text/javascript">
+    var dp;
+    var prevSelectedOrg = getCookie("TerminalRegSelectedOrg");
+    $(document).ready(function() {
+        //initialMonthPicker();
+        initialEpsMonthPicker();
+        $("#wholePageContainor").css("display", "none");
+        $("#divLoading").css("display", "block");
+        //$('#DatePicker').simpleDatePicker("", { onDateChanged: function() { DatePickerChanged(); } });
+        $('#inputComments').attr('value', '');
+        $.ajax({
+            type: 'get',
+            cache: false,
+            url: 'Service/TerminalRegstrationService.svc/GetAllTerminalsAsTree',
+            dataType: 'json',
+            success: function(data) {
+                BuildUpOrgTree(data);
+            }
+        });
+        AttachValueChange();
+        AttachEffect();
+
+
+    })//end of document ready
+    function initialEpsMonthPicker() {
+        
+        $("#TerminalMonthPicker").epsMonthPicker();
+    
+    }
+	function AttachEffect()
+	{
+		//make fake dropdown looks like real dropdown's effect
+		$('#selectTerminalLink').mouseover(function(){
+			  $('#selectTerminalBackground').attr('src','Images/dropdownbutton_whole_mouseover.png');
+			}).mouseout(function(){
+			  $('#selectTerminalBackground').attr('src','Images/dropdownbutton_whole.png');
+			});
+	}
+    //for eps4.4 patch add org tree for user to select
+	function BuildUpOrgTree(data) {
+	    //debugger;
+        $("#selectTerminalTree").html("");
+        var nodes = data.d;
+        AddNode(nodes, $("#selectTerminalTree"));
+        HideBranchIfWithoutAnyAccess();
+        var firstActiveLi;
+        
+        var query = '.TerminalTreeLIActive[id="' + prevSelectedOrg + '"]';
+            firstActiveLi = $("#selectTerminalTree").find(query);
+        if(firstActiveLi.length==0)
+            firstActiveLi = $("#selectTerminalTree").find(".TerminalTreeLIActive:first");
+        if (firstActiveLi.length == 0) {
+            //no org exist under this config
+            $("#divLoading").css("display", "none");
+            $("#wholePageContainor").css("display", "block");
+            return;
+        }
+		var name=firstActiveLi.html();
+		var id=firstActiveLi[0].id;
+		$("#selectedTerminalFromTree").html(name);
+		$("#selectTerminalTree").find(".TerminalTreeLiSelected").removeClass("TerminalTreeLiSelected");
+		$(firstActiveLi).addClass("TerminalTreeLiSelected");
+		
+		SelectTerminalChangeed(id);
+		
+    }
+    function AddNode(nodes, parent) {
+        //debugger;
+        var nodehtml = '<ul class="VesselTreeUL">'
+        $(nodes).each(function(i) {
+			//debugger;
+			if(nodes[i].Active==true)
+            	nodehtml += '<li onmouseover="javascript:this.style.textDecoration=\'underline\';" onmouseout="javascript:this.style.textDecoration=\'none\';" class="TerminalTreeLIActive"  onclick="javascript:liclicked(this)" id="' + nodes[i].C_OID + '">' + nodes[i].Name + '</li>';
+			else
+				nodehtml += '<li class="TerminalTreeLIDisable"  id="' + nodes[i].C_OID + '">' + nodes[i].Name + '</li>';
+        })
+        nodehtml += '</ul>'
+        if($(parent).html()=="")
+            parent.append(nodehtml);
+        else
+            parent.after(nodehtml);
+
+        $(nodes).each(function(i) {
+            var myparent='#'+$(this)[0].C_OID
+            AddNode($(this)[0].children,$(myparent));
+        })
+        
+    }
+	function liclicked(sender)
+	{
+		var id=$(sender)[0].id;
+		var name=$(sender).html();
+		$("#selectTerminalTree").find(".TerminalTreeLiSelected").removeClass("TerminalTreeLiSelected");
+		$(sender).addClass("TerminalTreeLiSelected");
+		$("#divTerminalTreeContainer").addClass("hideDiv");
+		
+		$("#selectedTerminalFromTree").html(name);
+		SelectTerminalChangeed(id);
+	}
+    function HideBranchIfWithoutAnyAccess()
+	{
+		var AllUL=$("#selectTerminalTree").find("ul");
+		$(AllUL).each(function(){
+			//debugger;
+			var needHide=$(this).find("li").hasClass("TerminalTreeLIActive");
+			if(needHide==false)
+			{
+				$(this).addClass("TerminalTreeULHide");
+			}
+		})
+	}
+    
+    function AttachValueChange() {
+        //$('table[id="terminalDatas"]').find('input').unbind("change keyup");
+		//$('table[id="transportDatas"]').find('input').unbind("change keyup");
+		$('td[id="tablesHolder"]').find('input').unbind("change keyup");
+        $('input[id="inputComments"]').unbind("change keyup");
+        $('table[id="terminalDatas"]').find('input').bind("change keyup", function() { ValueChanged(); });
+        $('table[id="transportDatas"]').find('input').bind("change keyup", function() { ValueChanged(); });
+        $('input[id="inputComments"]').bind("change keyup", function() { ValueChanged(); });
+    }
+    function ValueChanged() {
+        HideMessageDiv();
+    }
+    function DatePickerChanged() {
+        if ($("div[id = 'messageContainorTop']").html() == $("#divConfirmOverwrite").html())
+            HideMessageDiv();
+    }
+    function ClearNewRegData() {
+        $("tr[id*='ready']").each(function() {
+            $(this).find("td input[id*='txtValue']").attr("value", '0.0');
+        })
+        $('input[id="inputComments"]').attr({ value: '' });
+        HideMessageDiv();
+    }
+    function HideMessageDiv() {
+        $("div[id='messageContainorTop']").html("");
+        $("div[id='messageContainor']").html("");
+    }
+    function CheckAllValueIsNumber() {
+        var AllIsNum = true;
+        $("tr[id='ready']").each(function() {
+            var value = $(this).find('input[id=txtValue]').val();
+            if (!isNumber(value) || value < 0) {
+                AllIsNum = false;
+            }
+        })
+        return AllIsNum;
+    }
+    function SaveNewTerminalRegData() {
+        var errordata = false;
+        var legal = CheckAllValueIsNumber();
+        if (legal == false) {
+            var message = $("#divValueNotAllowNull").html();
+            alert(message);
+            return;
+        }
+
+        var list = new Array();
+        $("#tablesHolder").find("tr[id*='ready']").each(function() {
+            list.push({
+                C_OID: $(this).find("td[id*='C_OID']").html(),
+                RegValue: $(this).find("td input[id*='txtValue']").val()
+            });
+            if (trim($(this).find("td input[id*='txtValue']").val()) == '') {
+                errordata = true;
+            }
+        })
+    
+        if (list.length == 0) {
+            var message = $("#divNoRegistration").html();
+            alert(message);
+            return;
+        }
+        if (errordata == true) {
+            $("#messageContainor").css("color", "red");
+            $("#messageContainorTop").css("color", "red");
+            $("#messageContainor").html($("#divInputDateError").html());
+            $("#messageContainorTop").html($("#divInputDateError").html());
+            return;
+        }
+        var regDto = new Object();
+        var regToServerList = new Object();
+        regToServerList.ParameterSaveRegs = list;
+        regToServerList.SelectVesselOID = $("#cueerntTerminalID").html();
+        var getDate = $("#TerminalMonthPicker").simpleDateGet().format("yyyy-MM-dd");
+        
+        var s = getDate.split('-');
+
+        regToServerList.RegistrationDate = s[0] + "-" + s[1];
+        regToServerList.Comments = $("#inputComments").val();
+        var comfirm = $("#messageContainor").html();
+        if (comfirm == $("#divConfirmOverwrite").html() && lastDate == $("#TerminalMonthPicker").simpleDateGet().format("yyyy-MM-dd")) {
+            regToServerList.ConfirmOverwrite = true;
+        }
+        else {
+            regToServerList.ConfirmOverwrite = false;
+        }
+        regDto.regToServerList = regToServerList;
+
+        var para = Sys.Serialization.JavaScriptSerializer.serialize(regDto);
+        $("#wholePageContainor").css("display", "none");
+        $("#divLoading").css("display", "block");
+        $.ajax({
+            type: 'Post',
+            url: 'Service/TerminalRegstrationService.svc/SaveNewTerminalRegistration',
+            contentType: 'application/json;charset=utf-8',
+            data: para,
+            dataType: 'json',
+            success: function(response) {
+                SaveSucceed(response);
+                $("#wholePageContainor").css("display", "block");
+                $("#divLoading").css("display", "none");
+            }
+        })
+    }
+    function BindCopyValueImage() {
+
+        $("img[id='copyParameterValue']").click(function() {
+            var value = $(this.parentNode.parentNode).find("td[id='LastRegValue']").html();
+            $(this.parentNode.parentNode).find("td input[id*='txtValue']").attr("value", value);
+        })
+        $("#tablesHolder").find("img[id='imgCopyAll']").click(function() {
+            //$("#tablesHolder").find("tr[id!='header']&&[id!='template']").each(function() {
+//                var value = $(this).find('td[id="LastRegValue"]').html();
+//                $(this).find("td input[id*='txtValue']").attr("value", value);
+//            })
+			$(this).closest("table").find("tr[id!='header']&&[id!='template']").each(function() {
+                var value = $(this).find('td[id="LastRegValue"]').html();
+                $(this).find("td input[id*='txtValue']").attr("value", value);
+            })
+        })
+// 		$("#transportDatas").find("img[id='imgCopyAll']").click(function() {
+//            $("#transportDatas").find("tr[id!='header']&&[id!='template']").each(function() {
+//                var value = $(this).find('td[id="LastRegValue"]').html();
+//                $(this).find("td input[id*='txtValue']").attr("value", value);
+//            })
+//        })
+        $("img[id='copyParameterValue']").mouseover(function() {
+            $(this).attr("src", "Images\\darkrightArrow.gif");
+        })
+        $("img[id='copyParameterValue']").mouseout(function() {
+            $(this).attr("src", "Images\\rightArrow.gif");
+        })
+        $("img[id='copyParameterValue']").addClass("mousehand");
+
+        $("img[id='imgCopyAll']").mouseover(function() {
+            $(this).attr("src", "Images\\darkrightArrow.gif");
+        })
+        $("img[id='imgCopyAll']").mouseout(function() {
+            $(this).attr("src", "Images\\rightArrow.gif");
+        })
+//        $("img[id='monthpicker_btn']").mouseout(function() {
+//        $(this).attr("src", "Images\\calendar.png");
+//        })
+//        $("img[id='monthpicker_btn']").mouseover(function() {
+//        $(this).attr("src", "Images\\calendar_fade.png");
+//        })
+        $("img[id='imgCopyAll']").addClass("mousehand");
+
+    }
+    function BindTableData(TerminalID) {
+        var para = '{"TerminalOid":"' + TerminalID + '"}';
+        $.ajax({
+            type: 'post',
+            url: 'Service/TerminalRegstrationService.svc/GetConnectedParametersByTerminalId',
+            contentType: 'text/json',
+            data: para,
+            dataType: 'json',
+            success: function(parametersdata) {
+                BuildUpTable(parametersdata);
+            }
+        })
+    }
+    function BindSelectTerminal(data) {
+        $(data.d).each(function() {
+            $("#SelectTerminal").append("<option value=" + this.C_OID + ">" + this.Name + "</option>");
+        });
+    }
+    function SelectTerminalChangeed(TerminalOid) {
+        HideMessageDiv();
+		$("#cueerntTerminalID").html(TerminalOid);
+        $("#wholePageContainor").css("display", "none");
+        $("#divLoading").css("display", "block");
+        var para = '{"TerminalOid":"' + TerminalOid + '"}';
+        $.ajax({
+            type: 'post',
+            url: 'Service/TerminalRegstrationService.svc/GetConnectedParametersByTerminalId',
+            contentType: 'text/json',
+            data: para,
+            dataType: 'json',
+            success: function(parametersdata) {
+                BuildUpTable(parametersdata);
+                setCookie("TerminalRegSelectedOrg", TerminalOid, 365);
+            }
+            
+        })
+    }
+    function BuildUpTable(data) {
+        //partly finished work, separate parameters according aspect
+		
+		$("#tablesHolder").find("table[id!='terminalDatas']").remove();
+        
+		
+		
+        var TerminalDateView = $(data.d.ParameterTerminalRegs);
+        var AspectView = $(data.d.AspectList);
+        $(AspectView).each(function() {
+            
+            var aspectName = this.toString();
+            var table = $("#terminalDatas").clone();
+            $(table).removeClass("hidetemplate");
+            $(table).find("div[id='div_aspectName']").html(aspectName);
+            var tableName = 'table_' + aspectName.replace(/ /g, "_");
+            table.attr("id", tableName);
+            $(table).find("#lastRegDate").html(data.d.LastRegDate);
+            table.appendTo("#tablesHolder");
+            var parametersBelongToThisAspect = $(TerminalDateView).filter(function(index) { return this.Aspect == aspectName; });
+            $(parametersBelongToThisAspect).each(function(i, n) {
+                
+                var row = $("#terminalDatas #template").clone();
+                $(row.find("#Name")).find("#divName").text(n.Name);
+                $(row.find("#LastRegValue")).text(n.LastRegValue);
+                $(row.find("#Unit")).text(n.Unit);
+                $(row.find("#C_OID")).text(n.C_OID);
+                $(row.find("#NewInputData").find('input[id="txtValue"]')).attr("value", "0");
+                row.attr("id", "ready"); //change binded row id
+                row.removeClass("hidetemplate");
+                var query = "#" + tableName;
+                row.appendTo(query); //add new row into table
+            })
+
+        })
+		BindCopyValueImage();
+		$("input[id='txtValue']").numeric();
+		var nextdayString = data.d.NextSuggestRegDate; //like "10/15/2006"
+		var s = nextdayString.split('-');
+		var setDate = new Date();
+		setDate.setDate(1);
+		setDate.setFullYear(s[0]);
+		setDate.setMonth(s[1]-1);
+		$('#TerminalMonthPicker').simpleDateSet(setDate.format("yyyy-MM-dd"));
+		
+		SetTableStyle();
+		SetHightLightFocus();
+		AttachValueChange();
+		
+        $("#wholePageContainor").css("display", "block");
+        $("#divLoading").css("display", "none");
+    }
+    
+    function BuildUpTable_old(data) {
+        $("#terminalDatas").find("tr[id*='header']").find("span[id='lastRegDate']").html($(data.d.LastRegDate).selector);
+        var TerminalDateView = $(data.d.ParameterTerminalRegs)
+        $("#terminalDatas").find("tr[id='template']").removeClass("hidetemplate");
+        $("#transportDatas").find("tr[id='template']").removeClass("hidetemplate");
+        $("#terminalDatas").find("tr[id!='header']&&[id!='template']").remove();
+        $("#transportDatas").find("tr[id!='header']&&[id!='template']").remove();
+
+
+        //load terminal data into table
+        $.each(TerminalDateView, function(i, n) {
+            var row = $("#terminalDatas #template").clone();
+            //debugger;
+            $(row.find("#Name")).find("#divName").text(n.Name);
+            $(row.find("#LastRegValue")).text(n.LastRegValue);
+            $(row.find("#Unit")).text(n.Unit);
+            $(row.find("#C_OID")).text(n.C_OID);
+            $(row.find("#NewInputData").find('input[id="txtValue"]')).attr("value", "0");
+            row.attr("id", "ready"); //change binded row id
+            row.appendTo("#terminalDatas"); //add new row into table
+        });
+        //debugger;
+        $("#terminalDatas").find("tr[id='template']").addClass("hidetemplate");
+        BindCopyValueImage();
+        $("input[id='txtValue']").numeric();
+//        var date = new Date();
+          var nextdayString = data.d.NextSuggestRegDate; //like "10/15/2006"
+
+
+          var s = nextdayString.split('-');
+
+          var setDate = new Date();
+          setDate.setDate(1);
+          setDate.setFullYear(s[0]);
+          setDate.setMonth(s[1]-1);
+          $('#TerminalMonthPicker').simpleDateSet(setDate.format("yyyy-MM-dd"));
+   
+        SetTableStyle();
+        SetHightLightFocus();
+        AttachValueChange();
+        $("#wholePageContainor").css("display", "block");
+        $("#divLoading").css("display", "none");
+    }
+    function SetHightLightFocus() {
+        $('#tablesHolder tr[id="ready"]').find('input').each(function() {
+            $(this).focus(function() {
+                $(this).parent().parent().addClass("trfocuscolor");
+            })
+            $(this).blur(function() {
+                $(this).parent().parent().removeClass("trfocuscolor");
+            })
+        })
+        $('#tablesHolder tr[id="ready"]').find('input').each(function() {
+            $(this).focus(function() {
+                $(this).parent().parent().addClass("trfocuscolor");
+            })
+            $(this).blur(function() {
+                $(this).parent().parent().removeClass("trfocuscolor");
+            })
+        })
+    }
+    function SetTableStyle() {
+        $('#tablesHolder tr[id="header"]').addClass("writeback");
+        $('#tablesHolder tr:even[id="ready"]').addClass("writeback");
+    }
+    
+    var lastDate;
+    function SaveSucceed(responseData) {
+        var TerminalID = $("#cueerntTerminalID").html();
+        var comfirm = $("#messageContainor").html();
+        if (responseData.d != "ConfirmOverwrite" && responseData.d != "EnergyConsumption0WithTransportWorkNot0") {
+            BindTableData(TerminalID);
+            $("#messageContainor").css("color", "#3c9716");
+            $("#messageContainorTop").css("color", "#3c9716");
+            //clear the comment after save succeed
+            $("#inputComments").attr("value","")
+        }
+        else {
+            $("#messageContainor").css("color", "red");
+            $("#messageContainorTop").css("color", "red");
+        }
+        //
+        if (responseData.d == "ConfirmOverwrite") {
+            $("#messageContainor").html($("#divConfirmOverwrite").html());
+            $("#messageContainorTop").html($("#divConfirmOverwrite").html());
+        }
+        else if (responseData.d == "EnergyConsumption0WithTransportWorkNot0") {
+            $("#messageContainor").html($("#EnergyConsumption0WithTransportWorkNot0").html());
+            $("#messageContainorTop").html($("#EnergyConsumption0WithTransportWorkNot0").html());
+        }
+        else if (responseData.d == "SaveSuccess") {
+            $("#messageContainor").html($("#divSaveSuccess").html());
+            $("#messageContainorTop").html($("#divSaveSuccess").html());
+        }
+        else if (responseData.d == "Failed") {
+            $("#messageContainor").html($("#divSaveFailed").html());
+            $("#messageContainorTop").html($("#divSaveFailed").html());
+        }
+        
+        if (responseData.d == "ConfirmOverwrite") {
+            lastDate = $("#TerminalMonthPicker").simpleDateGet().format("yyyy-MM-dd");
+        }
+        else {
+            lastDate = "";
+        }
+    }
+    function QueryFailed() {
+    }
+	function HideTerminalTree()
+	{
+	    $("#divTerminalTreeContainer").addClass("hideDiv");
+	}
+    function SelectTerminalFromTree() {
+        var hide = $("#divTerminalTreeContainer").hasClass("hideDiv");
+        if (hide == true) {
+            var left = $("#selectTerminalLink").offset().left;
+            var top = $("#selectTerminalLink").offset().top;
+            top=top + $("#selectTerminalLink").height();
+            $("#divTerminalTreeContainer").css("top",top);
+            $("#divTerminalTreeContainer").css("left", left);
+            $("#divTerminalTreeContainer").removeClass("hideDiv");
+        }
+		else
+		{
+			$("#divTerminalTreeContainer").addClass("hideDiv");
+		}
+    }
+
+    function monthPickerPop() {
+        //alert('a')
+        var hide = $("#mp_container").hasClass("hideDiv");
+        
+        if (hide == true) {
+            var left = $("#DatePicker").offset().left;
+            var top = $("#DatePicker").offset().top;
+            top = top + $("#DatePicker").height();
+            $("#mp_container").css("top", top);
+            $("#mp_container").css("left", left);
+            $("#mp_container").removeClass("hideDiv");
+        }
+        else {
+            $("#mp_container").addClass("hideDiv");
+        }
+    
+    }
+ 
+</script>
+<%--<div id = "selectTerminalTree" style="height:400px; overflow: scroll; background-color:#FFFFFF; border-style:solid; border-width:thin; border-color:#3c9716; position:absolute; z-index:999" class="hideDiv"></div>--%>
+
+<div id="divTerminalTreeContainer" class="VesselTreeContainer hideDiv">
+    <div class="VesselTreeHeader"  style="display:none">
+        <div class="VesselTreeTitle"><asp:Label ID="lblTerminalTreeTitle" runat="server"></asp:Label></div>
+        <div class="VesselTreeController" onclick="HideTerminalTree()"></div>
+    </div>
+    
+    <div id = "selectTerminalTree" class="VesselTreeContent"></div>
+</div>
+
+<div id="wholePageContainor" style="width: 780px; display: block;" class="CommonLink">
+    <div class="dailyRegTitle" style="border-bottom: solid 1px #3c9716; height: 20px; margin-bottom: 5px;"><asp:Literal runat="server" ID="ltlDailyReg"></asp:Literal></div>
+  <ul class="menuUL" style="padding-bottom: 3px; padding-left: 3px">
+    <li class="menuLI"><a href="javascript:;" style="cursor: pointer; color: #3C9716;" id="SaveDataLinkTop" onclick="SaveNewTerminalRegData()" class="mousehand">
+      <asp:Label runat="server" ID="btnSaveButtonTop"></asp:Label>
+      </a> </li>
+    <li class="menuLI"><span class="menuSpan">|</span></li>
+    <li class="menuLI"><a href="javascript:;" style="cursor: pointer; color: #3C9716;" id="ClearDataLinkTop" onclick="ClearNewRegData()" class="mousehand">
+      <asp:Label runat="server" ID="btnClearButtonTop"></asp:Label>
+      </a></li>
+    <li class="menuLI">
+        <div id="messageContainorTop" style="float: left; margin-left: 40px; color: #3c9716;"> </div>
+    </li>
+  </ul>
+  
+  <div style="font-size: 0px; height: 5px; clear: both;"> </div>
+  
+  <table cellpadding="0" cellspacing="0" style="width: 780px">
+    <tr>
+      <td style="border: 1px solid rgb(102, 102, 102); padding: 10px 0pt 10px 10px; background-color: rgb(240, 240, 240); width:780px">
+      <table cellpadding="0" cellspacing="0">
+          <tr style="font-weight:bold">
+            <td style="width: 200px;"><asp:Label runat="server" ID="lblSelectTerminal" Text="Terminal:" />
+               </td>
+			<td style="width:15px"></td>
+            <td style="width: 150px;"><asp:Label runat="server" ID="lblDatepicker" Text="Registration date:" />
+            </td>
+			<td style="width:15px"></td>
+            <td style="width: 370px"><asp:Label runat="server" ID="lblComments" Text="Comment:" />
+            </td>
+          </tr>
+          <tr>
+            <td style="width: 200px;">
+                <div id="selectTerminalLink" style="width: 200px; height: 20px; float:left; position:relative;" onclick="javascript:SelectTerminalFromTree();">
+                    <img id="selectTerminalBackground" src="Images/dropdownbutton_whole.png"/>
+                    <div style="width:180px; height:18px; position:absolute; top: 1; left: 1; overflow:hidden">
+                        <span id="selectedTerminalFromTree" style=" float: left; width:178px; margin-left:4px">Select</span>
+                    </div>
+                </div>
+				<span style="display:none" id="cueerntTerminalID"></span>
+             </td>
+			<td style="width:15px"></td>
+            <td style="width: 120px;">
+                    <%--<div id="DatePicker" style="float:left; padding-right:5px; position:relative;">
+                        <img id="monthpicker_input" src="Images/monthpicker_input.gif"/>
+                        <div style="width:70px; height:18px; position:absolute; top: 1; left: 1; overflow:hidden">
+                            <span id="monthpicker_span" style=" float: left; width:70px; margin-left:4px"></span>
+                        </div>
+                    </div>
+                    <div  onclick="javascript:monthPickerPop();">
+                        <img id="monthpicker_btn" src="Images/calendar.png" style="height:15px; float:left;overflow:hidden; cursor:pointer" />
+                    </div>--%>
+                    <div id="TerminalMonthPicker"></div>
+            </td>
+			<td style="width:15px"></td>
+            <td style="width: 400px"><input type="text" style="width: 400px;" id="inputComments" />
+            </td>
+          </tr>
+        </table>
+        </td>
+    </tr>
+    <tr>
+      <td id="tablesHolder" style="padding: 5px 0 0 0; width: 780px;">
+      
+        <table id="terminalDatas" class="hidetemplate" cellspacing="0" style="border: 1px solid rgb(102, 102, 102); padding: 0px 0pt 0px 0px; background-color: rgb(240, 240, 240); width:100%">
+          <thead>
+            <tr id="header" style="background-color:#E1E1E1; height:25px; font-weight:bold">
+              <td align="left" style="width: 200px; padding-left: 10px;"><!-- <asp:Label runat="server" ID="lblparameterName2" Text="Parameter Name" />-->
+              	<div id="div_aspectName">name</div>
+			  </td>
+              <td id="RegValue" align="left" style="width: 155px"> <asp:Label runat="server" ID="lblregisteredValue2" Text="" />
+                <span id="lastRegDate"></span> </td>
+              <td style="width: 25px"> </td>
+              <td align="left" style="width: 190px"> <img id="imgCopyAll" width="13px" height="12px" src="Images\rightArrow.gif" />
+                <asp:Label runat="server" ID="lblcopyOldData2" Text="Copy Old Data" />
+              </td>
+              <td align="left" style="width: 170px"> <asp:Label runat="server" ID="lblnewRegValue2" Text="New Reg Value" />
+              </td>
+              <td align="left" style="width: 40px"> <asp:Label runat="server" ID="lblunit2" Text="Unit" />
+              </td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr id="template" class="trHeight hidetemplate">
+              <td id="Name" style="padding-left: 10px;"><div style="width: 200px; overflow: hidden" id="divName"> </div></td>
+              <td id="LastRegValue" align="center" style="width:155px"></td>
+              <td style="width: 25px"></td>
+              <td id="Image"><img id="copyParameterValue" width="13px" height="12px" src="Images\rightArrow.gif" /> </td>
+              <td id="NewInputData"><input id="txtValue" type="text" value="0.0" style="width: 170px" />
+              </td>
+              <td id="Unit" style="width: 40px"></td>
+              <td id="C_OID" class="hidetd"></td>
+            </tr>
+          </tbody>
+        </table></td>
+    </tr>
+  </table>
+  <ul class="menuUL" style="padding-top: 3px; padding-left: 3px">
+    <li class="menuLI"><a href="javascript:;" style="cursor: pointer; color: #3C9716;" id="SaveDataLink" onclick="SaveNewTerminalRegData()" class="mousehand">
+      <asp:Label runat="server" ID="btnSaveBotton"></asp:Label>
+      </a> </li>
+    <li class="menuLI"><span class="menuSpan">|</span></li>
+    <li class="menuLI"><a href="javascript:;" style="cursor: pointer; color: #3C9716;" id="ClearDataLink" onclick="ClearNewRegData()" class="mousehand">
+      <asp:Label runat="server" ID="btnClearBotton"></asp:Label>
+      </a></li>
+  </ul>
+  <div id="messageContainor" style="float: left; margin-left: 40px; color: #3c9716;"> </div>
+  <br />
+  <div id="reminder" style="color: #3C9716; padding-top: 4px;">
+    <ul class="menuUI" style="padding: 0; margin: 0;" style="display:none">
+      <li class="menuLI">
+        <%--<asp:Literal runat="server" ID="Literalreminder"></asp:Literal>--%>
+      </li>
+    </ul>
+  </div>
+  <br />
+  <br />
+  <div class="redborder" style="height: 20px; width: 40px; display: none" onclick="javascript:test()"> </div>
+</div>
+<div id="divLoading" style="width: 81px; height: 21px; background-image: url(Images/loading.gif);
+    display: none; margin: 50px 0 0 200px;"> </div>
+<div id="divLocalizeText" style="display: none">
+  <div id="divValueNotAllowNull">
+    <asp:Literal ID="ltlValueNotAllowNull" runat="server"></asp:Literal>
+  </div>
+  <div id="divNoRegistration">
+    <asp:Literal ID="ltlNoRegistration" runat="server"></asp:Literal>
+  </div>
+  <div id="divSaveSuccess">
+    <asp:Literal ID="ltlSaveSuccess" runat="server"></asp:Literal>
+  </div>
+  <div id="divSaveFailed">
+    <asp:Literal ID="ltlSaveFailed" runat="server"></asp:Literal>
+  </div>
+  <div id="divConfirmOverwrite">
+    <asp:Literal ID="ltlConfirmOverwrite" runat="server"></asp:Literal>
+  </div>
+  <div id="divInputDateError">
+    <asp:Literal ID="ltlInputError" runat="server"></asp:Literal>
+  </div>
+  <div id="divEnergyConsumption">
+    <asp:Literal ID="literalEnergyConsumption" runat="server"></asp:Literal>
+  </div>
+  <div id="divTransportWork">
+    <asp:Literal ID="literalTransportWork" runat="server"></asp:Literal>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<%--<script type="text/javascript" src="jquery_1.3.2.js"></script>
+
+<script type="text/javascript">
+//    $(document).ready(function() {
+//        
+//    })
+    function initialMonthPicker() {
+        //alert('initial')
+        var date = new Date();
+        var year = date.getFullYear();
+        var month = date.getMonth() + 1;
+        $(".mp_year").html(year);
+        var query = 'div[value="' + month + '"]';
+        $("#mp_container").find(query).addClass("mp_selectedCell");
+        $("#mp_container").find(".mp_cell").click(function() {
+            $("#mp_container").find(".mp_cell").removeClass("mp_selectedCell");
+            $(this).addClass("mp_selectedCell");
+            $("#mp_container").addClass("hideDiv");
+            $("#monthpicker_span").html($("#mp_container").find(".mp_year").html() + "-" + $(this).attr("value"));
+        })
+        $("#mp_container").find(".mp_cell").mouseover(function() {
+
+            $(this).addClass("mp_mouseOverCell")
+        })
+        $("#mp_container").find(".mp_cell").mouseout(function() {
+
+            $(this).removeClass("mp_mouseOverCell")
+        })
+        $("#monthpicker_span").html(year + "-" + month);
+
+    }
+    function setMonth(Year,Month) {
+        $("#mp_container").find(".mp_year").html(Year);
+        $("#mp_container").find(".mp_cell").removeClass("mp_selectedCell");
+        var query = 'div[value="' + Month + '"]';
+        $("#mp_container").find(query).addClass("mp_selectedCell");
+    }
+    function mp_left_click() {
+        var currentyear = $("#mp_container").find(".mp_year").html();
+        currentyear = parseInt(currentyear, 10)
+        $("#mp_container").find(".mp_year").html(currentyear - 1);
+    }
+    function mp_right_click() {
+        var currentyear = $("#mp_container").find(".mp_year").html();
+        currentyear = parseInt(currentyear, 10)
+        $("#mp_container").find(".mp_year").html(currentyear + 1);
+    }
+</script>
+
+<style type="text/css">
+
+.mp_container{ width:120px; height:150px; position:absolute;}
+.mp_cell { 
+			width:40px; height:30px;
+			float:left; 
+			text-align:center;
+			cursor:pointer;
+		    background-color:White;
+		    padding-top:3px;
+		  }
+.mp_table
+{
+	border-collapse: collapse; border: solid 2px black;
+}
+.mp_table td, .mp_table div
+{
+	background-color:#CCCCCC;
+}
+.mp_table td
+{
+	border: solid 2px #AAAAAA;
+}
+.mp_sub_table td
+{
+	border: 0;
+}
+.mp_selectedCell{ background-color:#FF6666 !important; color:White!important;}
+.mp_mouseOverCell{ background-color:#ffffff !important;}
+.mp_header{height:20px; overflow: hidden;}
+.mp_leftbutton{ width:20px; cursor:pointer; padding-left: 2px;}
+.mp_year{}
+.mp_rightbutton{ width:20px; cursor:pointer; text-align: right; padding-right: 2px;}
+</style>
+
+
+<div id="mp_container" class="mp_container hideDiv">
+<table border="1" cellspacing="0" style="" class="mp_table">
+<tr>
+    <td colspan="3">
+	    <div class="mp_header">
+	        <table cellpadding="0" cellspacing="0" width="100%" class="mp_sub_table">
+	            <tr>
+	                <td style="width:40px;" align="left"><div class="mp_leftbutton" onClick="javascript:mp_left_click()"><</div></td>
+	                <td align="center"><div class="mp_year"></div></td>
+	                <td style="width:40px;" align="right"><div class="mp_rightbutton" onClick="javascript:mp_right_click()">></div></td>
+	            </tr>
+	        </table>
+	    </div>
+	</td>
+</tr>
+<tr>
+    <td><div class="mp_cell" value="01">Jan</div></td>
+    <td><div class="mp_cell" value="02">Feb</div></td>
+    <td><div class="mp_cell" value="03">Mar</div></td>
+</tr>
+<tr>  
+  <td><div class="mp_cell" value="04">Apr</div></td>
+  <td><div class="mp_cell" value="05">May</div></td>
+  <td><div class="mp_cell" value="06">June</div></td>
+</tr>  
+<tr>  
+  <td><div class="mp_cell" value="07">July</div></td>
+  <td><div class="mp_cell" value="08">Aug</div></td>
+  <td><div class="mp_cell" value="09">Spet</div></td>
+</tr>
+<tr>
+  <td><div class="mp_cell" value="10">Oct</div></td>
+  <td><div class="mp_cell" value="11">Nov</div></td>
+  <td><div class="mp_cell" value="12">Dec</div></td>
+</tr>
+  
+</table>
+</div>
+--%>

@@ -1,0 +1,94 @@
+<UserSettings>
+	<ApplicationIdentity version="9.0"/>
+	<ToolsOptions>
+		<ToolsOptionsCategory name="Environment" RegisteredName="Environment"/>
+		<ToolsOptionsCategory name="TextEditor" RegisteredName="TextEditor">
+			<ToolsOptionsSubCategory name="AllLanguages" RegisteredName="AllLanguages" PackageName="Text Management Package"/>
+		</ToolsOptionsCategory>
+	</ToolsOptions>
+	<Category name="Database Tools" RegisteredName="Database Tools"/>
+	<Category name="Environment_Group" RegisteredName="Environment_Group">
+		<Category name="Environment_FontsAndColors" Category="{1EDA5DD4-927A-43a7-810E-7FD247D0DA1D}" Package="{DA9FB551-C724-11d0-AE1F-00A0C90FFFC3}" RegisteredName="Environment_FontsAndColors" PackageName="Visual Studio Environment Package">
+			<PropertyValue name="Version">2</PropertyValue>
+			<FontsAndColors Version="2.0">
+				<Categories>
+					<Category GUID="{A27B4E24-A735-4D1D-B8E7-9716E1E3D8E0}" FontName="Consolas" FontSize="11" CharSet="0" FontIsDefault="No">
+						<Items>
+							<Item Name="Plain Text" Foreground="0x00A8A8A8" Background="0x00303030" BoldFont="No"/>
+							<Item Name="Line Numbers" Foreground="0x0000FFFF" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Code Snippet Dependent Field" Foreground="0x00808080" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Code Snippet Field" Foreground="0x01000000" Background="0x001C4F1C" BoldFont="No"/>
+							<Item Name="Collapsible Text" Foreground="0x003C3C3C" Background="0x01000003" BoldFont="No"/>
+							<Item Name="outlining.collapsehintadornment" Foreground="0x00E8DDD7" Background="0x00283917" BoldFont="No"/>
+							<Item Name="Comment" Foreground="0x0006A459" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Compiler Error" Foreground="0x00FF3C3C" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Could not load resource (Stored procedures)" Foreground="0x002068FC" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Could not load resource (String literals)" Foreground="0x00168FFC" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Could not load resource (System tables)" Foreground="0x0006A459" Background="0x02000000" BoldFont="No"/>
+							<Item Name="CSS Comment" Foreground="0x0006A459" Background="0x02000000" BoldFont="No"/>
+							<Item Name="CSS Keyword" Foreground="0x00EA7C1A" Background="0x02000000" BoldFont="No"/>
+							<Item Name="CSS Property Name" Foreground="0x00168FFC" Background="0x02000000" BoldFont="No"/>
+							<Item Name="CSS Property Value" Foreground="0x00E07514" Background="0x02000000" BoldFont="No"/>
+							<Item Name="CSS Selector" Foreground="0x002068FC" Background="0x02000000" BoldFont="No"/>
+							<Item Name="CSS String Value" Foreground="0x00EA7C1A" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Definition Window Current Match" Foreground="0x00A8A8A8" Background="0x02000000" BoldFont="No"/>
+							<Item Name="SourceLineClassificationFormat" Foreground="0x002068FC" Background="0x02000000" BoldFont="No"/>
+							<Item Name="FileLineClassificationFormat" Foreground="0x00A8A8A8" Background="0x02000000" BoldFont="No"/>
+							<Item Name="SymbolLineClassificationFormat" Foreground="0x00E06E64" Background="0x02000000" BoldFont="No"/>
+							<Item Name="InstructionLineClassificationFormat" Foreground="0x00A8A8A8" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Error" Foreground="0x002068FC" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Error Message" Foreground="0x002068FC" Background="0x02000000" BoldFont="No"/>
+							<Item Name="HTML Attribute Name" Foreground="0x002068FC" Background="0x02000000" BoldFont="No"/>
+							<Item Name="HTML Attribute Value" Foreground="0x00E06F64" Background="0x02000000" BoldFont="No"/>
+							<Item Name="HTML Comment" Foreground="0x0006A459" Background="0x02000000" BoldFont="No"/>
+							<Item Name="HTML Element Name" Foreground="0x00168FFC" Background="0x02000000" BoldFont="No"/>
+							<Item Name="HTML Entity" Foreground="0x003454A0" Background="0x02000000" BoldFont="No"/>
+							<Item Name="HTML Operator" Foreground="0x00EC892F" Background="0x02000000" BoldFont="No"/>
+							<Item Name="HTML Tag Delimiter" Foreground="0x003454A0" Background="0x02000000" BoldFont="Yes"/>
+							<Item Name="Keyword" Foreground="0x00E06E64" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Literal" Foreground="0x002068FC" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Memory Changed" Foreground="0x002068FC" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Preprocessor Keyword" Foreground="0x00EA7C1A" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Refactoring Current Field" Foreground="0x01000000" Background="0x001C4F1C" BoldFont="No"/>
+							<Item Name="Refactoring Dependent Field" Foreground="0x00A8A8A8" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Script Comment" Foreground="0x0006A459" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Script Keyword" Foreground="0x00EB7E1D" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Script String" Foreground="0x002068FC" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Smart Tag" Foreground="0x00FF5353" Background="0x02000000" BoldFont="No"/>
+							<Item Name="SQL Stored Procedure" Foreground="0x00168FFC" Background="0x02000000" BoldFont="No"/>
+							<Item Name="SQL String" Foreground="0x002068FC" Background="0x02000000" BoldFont="No"/>
+							<Item Name="SQL System Table" Foreground="0x0006A459" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Stale Code" Foreground="0x00E800E8" Background="0x02000000" BoldFont="No"/>
+							<Item Name="String" Foreground="0x002068FC" Background="0x02000000" BoldFont="No"/>
+							<Item Name="String(C# @ Verbatim)" Foreground="0x002068FC" Background="0x02000000" BoldFont="No"/>
+							<Item Name="SymbolReferenceClassificationFormat" Foreground="0x0006A459" Background="0x02000000" BoldFont="Yes"/>
+							<Item Name="Tracepoint (Disabled)" Foreground="0x0006A459" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Tracepoint (Enabled)" Foreground="0x002068FC" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Track Changes after save" Foreground="0x02000000" Background="0x00105210" BoldFont="No"/>
+							<Item Name="Track Changes before save" Foreground="0x02000000" Background="0x0000606A" BoldFont="No"/>
+							<Item Name="Track reverted changes" Foreground="0x02000000" Background="0x00044960" BoldFont="No"/>
+							<Item Name="urlformat" Foreground="0x00E06E64" Background="0x02000000" BoldFont="No"/>
+							<Item Name="XAML Text" Foreground="0x00A8A8A8" Background="0x02000000" BoldFont="No"/>
+							<Item Name="XML Attribute" Foreground="0x00168FFC" Background="0x02000000" BoldFont="No"/>
+							<Item Name="XML Attribute Quotes" Foreground="0x00E06E64" Background="0x02000000" BoldFont="No"/>
+							<Item Name="XML Attribute Value" Foreground="0x00E06E64" Background="0x02000000" BoldFont="No"/>
+							<Item Name="XML Comment" Foreground="0x0006A459" Background="0x02000000" BoldFont="No"/>
+							<Item Name="XML Delimiter" Foreground="0x003454A0" Background="0x02000000" BoldFont="Yes"/>
+							<Item Name="XML Keyword" Foreground="0x00E06E64" Background="0x02000000" BoldFont="No"/>
+							<Item Name="XML Name" Foreground="0x002068FC" Background="0x02000000" BoldFont="No"/>
+							<Item Name="XML Text" Foreground="0x00A8A8A8" Background="0x02000000" BoldFont="No"/>
+						</Items>
+					</Category>
+				</Categories>
+			</FontsAndColors>
+		</Category>
+	</Category>
+	<Category name="Source Control_TeamFoundation" Category="{2A718788-A6D9-44C5-90EF-438BF5B06A74}" Package="{4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}" RegisteredName="Source Control_TeamFoundation" PackageName="Microsoft.VisualStudio.TeamFoundation.VersionControl.HatPackage, Microsoft.VisualStudio.TeamFoundation.VersionControl, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+		<PropertyValue name="IsProxyEnabled">False</PropertyValue>
+		<PropertyValue name="ProxyUrl"/>
+		<PropertyValue name="ShowDeletedItems">false</PropertyValue>
+		<PropertyValue name="GetLatestOnCheckOut">false</PropertyValue>
+		<PropertyValue name="OpenSceToMostRecentPath">true</PropertyValue>
+		<PropertyValue name="PromptToConfirmMergeResult">-1</PropertyValue>
+	</Category>
+</UserSettings>
