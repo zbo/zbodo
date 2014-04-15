@@ -1,3 +1,4 @@
+#this is comments
 def printArray(array):
     for i in range(len(array)):
         print array[i];
