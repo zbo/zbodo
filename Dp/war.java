@@ -1,4 +1,3 @@
-//so tricky
 import java.util.ArrayList;
 import java.util.Hashtable;
 //zju 3508
